@@ -240,22 +240,28 @@ const ImageProcessor = {
         const x = (canvas.width - scaledWidth) / 2 + offsetX;
         const y = (canvas.height - scaledHeight) / 2 + offsetY;
         
-        // 1. 绘制完整的替换图片（半透明）
+        // 1. 先绘制半透明的完整替换图片作为背景
         ctx.globalAlpha = 0.3;
         ctx.drawImage(srcImg, x, y, scaledWidth, scaledHeight);
         
-        // 2. 创建遮罩区域的完整替换图片
-        ctx.globalAlpha = 1.0;
-        ctx.globalCompositeOperation = 'source-atop';
-        
-        // 先绘制遮罩形状
-        ctx.drawImage(maskImg, 0, 0);
-        
-        // 然后在遮罩区域绘制完整的替换图片
-        ctx.globalCompositeOperation = 'source-in';
+        // 2. 重置透明度，绘制完全不透明的替换图片
+        ctx.globalAlpha = 1;
         ctx.drawImage(srcImg, x, y, scaledWidth, scaledHeight);
         
-        // 恢复正常混合模式
+        // 3. 使用destination-in混合模式，只保留遮罩形状内的内容
+        ctx.globalCompositeOperation = 'destination-in';
+        ctx.drawImage(maskImg, 0, 0);
+        
+        // 4. 恢复正常混合模式
+        ctx.globalCompositeOperation = 'source-over';
+        
+        // 5. 重新绘制半透明背景（在遮罩外的区域）
+        ctx.globalAlpha = 0.3;
+        ctx.globalCompositeOperation = 'destination-over';
+        ctx.drawImage(srcImg, x, y, scaledWidth, scaledHeight);
+        
+        // 恢复默认设置
+        ctx.globalAlpha = 1;
         ctx.globalCompositeOperation = 'source-over';
         
         return canvas;

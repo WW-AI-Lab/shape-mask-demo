@@ -1,105 +1,250 @@
-# Shape-Mask Crop Demo (Pure Front-End)
+# Shape-Mask 图片替换工具 (纯前端实现)
 
-最小可运行示例：  
-1. **上传任意透明 PNG** → 作为形状遮罩（mask）  
-2. **上传任意图片** → 自动按遮罩裁剪  
-3. 浏览器即时展示结果，无后端、无构建、零依赖
+一个强大的**交互式图片替换工具**，基于形状遮罩裁剪技术：  
+1. **上传透明PNG** → 作为形状遮罩（mask）  
+2. **点击图片** → 激活替换模式  
+3. **选择新图片** → 实时预览替换效果  
+4. **拖拽调整位置** → 缩放控制大小  
+5. **一键完成** → 下载完美裁剪结果
+
+✨ **特色功能**：所见即所得的实时预览、拖拽移动、智能缩放、现代化UI
+
+![image-20250622113628021](./assets/image-20250622113628021.png)
 
 ---
 
-## 🗂️ 目录结构
+## 🗂️ 项目结构
 
 ```
 shape-mask-demo/
-├─ index.html      # 单页应用，直接双击即可运行
-├─ app.js          # 全部逻辑：加载文件、Canvas 裁剪、结果预览
-└─ style.css       # 简易样式
+├─ index.html              # 主页面：现代化三栏布局
+├─ app.js                  # 核心逻辑：模块化架构 + 交互控制
+├─ style.css              # 样式：响应式设计 + 毛玻璃效果
+├─ docs/
+│  └─ development-plan.md  # 开发规划：详细的功能实现计划
+└─ README.md              # 项目说明
 ```
 
 ---
 
 ## 🚀 快速开始
 
-1. **下载/克隆** 本仓库  
-2. 直接双击 `index.html`（或用 VS Code Live Server / 任何静态服务器）  
-3. 依次点击  
-   - **Choose Mask (PNG with alpha)**  
-   - **Choose Image**  
-4. 页面立即显示裁剪后的预览，可右键“另存为”输出 PNG
+### 方法一：直接运行
+1. **下载项目** 到本地  
+2. 双击 `index.html` 或使用任何静态服务器  
+3. 开始使用！
 
-> ✅ 支持任意分辨率、任意形状（圆形、星形、logo 等），完全跑在浏览器主线程。  
-> 💡 若需批量处理或大尺寸图片，推荐迁移到 `OffscreenCanvas` + Web Worker，思路一致。
+### 方法二：本地服务器
+```bash
+# 使用Python
+python -m http.server 8000
+
+# 使用Node.js
+npx serve .
+
+# 使用VS Code Live Server
+# 右键 index.html → Open with Live Server
+```
+
+### 使用步骤
+1. **上传遮罩图片**：选择PNG透明图片作为形状模板
+2. **点击图片**：点击Canvas中的图片激活替换模式
+3. **选择替换图片**：在右侧面板上传要替换的图片
+4. **调整效果**：
+   - 🖱️ **拖拽移动**：直接拖拽调整图片位置
+   - 📏 **缩放控制**：使用滑块或快捷按钮调整大小
+   - 👁️ **实时预览**：所有调整立即显示效果
+5. **完成替换**：点击"完成"按钮生成最终结果
+6. **下载保存**：一键下载PNG格式结果
+
+---
+
+## ✨ 核心特性
+
+### 🎯 交互体验
+- **点击激活**：只有点击Canvas中的图片才显示替换工具
+- **拖拽移动**：鼠标直接拖拽调整替换图片位置
+- **实时预览**：所有调整立即反映在Canvas上
+- **智能缩放**：自动计算最佳缩放比例 + 手动精调
+
+### 🎨 视觉效果
+- **半透明遮罩**：遮罩区域高亮显示，其他区域半透明
+- **现代化UI**：毛玻璃效果、平滑动画、响应式布局
+- **状态反馈**：清晰的操作提示和进度显示
+
+### ⚡ 技术特点
+- **零依赖**：纯原生JavaScript + HTML5 Canvas
+- **模块化架构**：清晰的代码组织和状态管理
+- **高性能**：实时预览无卡顿，支持大尺寸图片
+- **跨平台**：支持所有现代浏览器
 
 ---
 
 ## 🔧 实现核心
 
+### 基础裁剪算法
 ```js
-// 1) 读取文件为 <img>
-function loadImg(file) {
-  return new Promise(r => {
-    const img = new Image();
-    img.src = URL.createObjectURL(file);
-    img.onload = () => r(img);
-  });
-}
-
-// 2) 组合到同尺寸 Canvas 并做 'destination-in' 裁剪
-async function compose(maskFile, imgFile) {
-  const [maskImg, srcImg] = await Promise.all([loadImg(maskFile), loadImg(imgFile)]);
-
-  // 统一尺寸 = 取遮罩尺寸（也可按需缩放）
-  const w = maskImg.width, h = maskImg.height;
-  const cvs = document.createElement('canvas');
-  cvs.width = w; cvs.height = h;
-  const ctx = cvs.getContext('2d');
-
-  // 2.1 先绘原图（会被裁剪）
-  ctx.drawImage(srcImg, 0, 0, w, h);
-  // 2.2 改混合模式 -> destination-in 仅保留两者相交且 mask alpha>0 的像素
-  ctx.globalCompositeOperation = 'destination-in';
-  ctx.drawImage(maskImg, 0, 0, w, h);
-
-  return cvs;   // <canvas> 可直接放进 <img>、toBlob()、toDataURL()...
+// 使用Canvas合成操作实现形状遮罩裁剪
+function cropImageWithMask(maskImg, srcImg, scale = 1, offsetX = 0, offsetY = 0) {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    // 设置Canvas尺寸为遮罩尺寸
+    canvas.width = maskImg.width;
+    canvas.height = maskImg.height;
+    
+    // 计算替换图片的位置和大小
+    const scaledWidth = srcImg.width * scale;
+    const scaledHeight = srcImg.height * scale;
+    const x = (canvas.width - scaledWidth) / 2 + offsetX;
+    const y = (canvas.height - scaledHeight) / 2 + offsetY;
+    
+    // 绘制替换图片
+    ctx.drawImage(srcImg, x, y, scaledWidth, scaledHeight);
+    
+    // 使用destination-in混合模式，只保留遮罩形状内的内容
+    ctx.globalCompositeOperation = 'destination-in';
+    ctx.drawImage(maskImg, 0, 0);
+    
+    return canvas;
 }
 ```
 
-**关键点解释**
+### 实时预览效果
+```js
+// 生成带半透明效果的预览
+function previewReplaceWithScale(maskImg, srcImg, scale, offsetX, offsetY) {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    // 1. 绘制半透明背景
+    ctx.globalAlpha = 0.3;
+    ctx.drawImage(srcImg, x, y, scaledWidth, scaledHeight);
+    
+    // 2. 绘制完整图片
+    ctx.globalAlpha = 1;
+    ctx.drawImage(srcImg, x, y, scaledWidth, scaledHeight);
+    
+    // 3. 应用遮罩裁剪
+    ctx.globalCompositeOperation = 'destination-in';
+    ctx.drawImage(maskImg, 0, 0);
+    
+    // 4. 添加半透明背景层
+    ctx.globalCompositeOperation = 'destination-over';
+    ctx.globalAlpha = 0.3;
+    ctx.drawImage(srcImg, x, y, scaledWidth, scaledHeight);
+    
+    return canvas;
+}
+```
 
-| 步骤 | 技术 | 备注 |
+### 拖拽交互处理
+```js
+// Canvas拖拽事件处理
+canvas.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    
+    const rect = canvas.getBoundingClientRect();
+    const currentX = e.clientX - rect.left;
+    const currentY = e.clientY - rect.top;
+    
+    // 计算偏移量（考虑Canvas显示缩放）
+    const displayScale = canvas.offsetWidth / canvas.width;
+    replaceOffsetX += (currentX - dragStartX) / displayScale;
+    replaceOffsetY += (currentY - dragStartY) / displayScale;
+    
+    // 实时更新预览
+    updateReplacePreview();
+});
+```
+
+---
+
+## 📋 技术架构
+
+### 模块化设计
+```js
+// 应用状态管理
+const AppState = {
+    INITIAL: 'initial',        // 初始状态
+    MASK_LOADED: 'mask_loaded', // 遮罩已加载
+    TOOL_ACTIVE: 'tool_active', // 工具激活
+    PROCESSING: 'processing',   // 处理中
+    COMPLETED: 'completed'      // 完成
+};
+
+// 核心模块
+const FileManager = { /* 文件处理 */ };
+const CanvasRenderer = { /* Canvas渲染 */ };
+const ImageProcessor = { /* 图像处理 */ };
+const UIController = { /* 界面控制 */ };
+const EventHandlers = { /* 事件处理 */ };
+```
+
+### 关键技术点
+
+| 技术 | 应用 | 说明 |
 |------|------|------|
-| 读取文件 | `URL.createObjectURL` | 零拷贝，释放记得 `URL.revokeObjectURL` |
-| 裁剪 | `globalCompositeOperation = 'destination-in'` | 相当于 *source∧mask*；避免手写像素遍历 |
-| 输出 | `canvas.toBlob(cb, 'image/png')` | 透明通道完整保存，可上传或下载 |
+| `globalCompositeOperation` | 形状裁剪 | `destination-in`实现遮罩效果 |
+| `URL.createObjectURL` | 文件读取 | 零拷贝文件处理 |
+| `Canvas API` | 图像处理 | 高性能图像合成和变换 |
+| `事件委托` | 交互控制 | 优化的鼠标和拖拽处理 |
+| `模块化架构` | 代码组织 | 清晰的职责分离和状态管理 |
 
 ---
 
-## 📝 index.html 摘要
+## 🌐 浏览器支持
 
-```html
-<input id="mask" type="file" accept="image/png">
-<input id="src"  type="file" accept="image/*">
-<canvas id="preview"></canvas>
+- ✅ **Chrome 61+**
+- ✅ **Edge 79+**  
+- ✅ **Firefox 60+**
+- ✅ **Safari 11+**
 
-<script type="module" src="app.js"></script>
+> 支持所有现代浏览器，无需任何polyfill
+
+---
+
+## 🛠️ 扩展方向
+
+### 已实现功能
+- [x] 基础形状遮罩裁剪
+- [x] 交互式图片替换
+- [x] 拖拽移动调整
+- [x] 缩放控制
+- [x] 实时预览
+- [x] 现代化UI设计
+- [x] 响应式布局
+
+### 可扩展功能
+- [ ] **旋转控制**：添加图片旋转功能
+- [ ] **多图层支持**：支持多个替换图片叠加
+- [ ] **滤镜效果**：添加色彩调整、模糊等效果
+- [ ] **批量处理**：Web Worker + OffscreenCanvas
+- [ ] **历史记录**：撤销/重做操作
+- [ ] **模板库**：预设形状模板
+- [ ] **导出选项**：多种格式和尺寸导出
+
+### 性能优化
+```js
+// 建议的优化方向
+- OffscreenCanvas：大图片处理
+- Web Worker：批量操作
+- WebAssembly：复杂图像算法
+- IndexedDB：本地缓存
 ```
 
-浏览器支持：Chrome 61+、Edge 79+、Firefox 60+、Safari 11+  
-（即几乎所有现代环境）
+---
+
+## 📁 项目文档
+
+- **[开发规划](./docs/development-plan.md)**：详细的功能实现计划和进度跟踪
+- **代码注释**：完整的函数和模块说明
+- **Git提交历史**：清晰的开发过程记录
 
 ---
 
-## 🛠️ 可扩展方向
+## 📄 开源协议
 
-| 需求 | 改动 |
-|------|------|
-| **保持原图宽高比** | 先算 `fitBox`，`drawImage` 时传 9-宫参数 |
-| **任意多边形硬裁剪** | 预处理 mask → `ctx.clip()` + Path2D |
-| **拖拽/旋转/缩放** | 用 `hammer.js` / `pinch-zoom` 自己监听手势，再变换画布 |
-| **批量处理** | 把裁剪逻辑搬到 Web Worker，主线程只接收 Blob |
+**MIT License** — 随意商用、改造，欢迎贡献代码！
 
----
-
-## 📄 License
-
-MIT — 随意商用、改造，但别忘了点个 ⭐。
+如果这个项目对你有帮助，请给个 ⭐ Star 支持一下！
