@@ -70,30 +70,7 @@
                             </div>
                         </div>
                         <div class="canvas-wrapper">
-                            <canvas id="main-canvas" width="400" height="400"></canvas>
-                            <div class="canvas-overlay" id="canvas-overlay">
-                                <div class="overlay-content">
-                                    <div class="overlay-icon">🎯</div>
-                                    <p>上传PNG透明图片开始使用</p>
-                                </div>
-                            </div>
-                            
-                            <!-- 替换图片控制层 -->
-                            <div class="replace-controls" id="replace-controls" style="display: none;">
-                                <div class="replace-upload-zone">
-                                    <div class="upload-prompt">
-                                        <div class="upload-icon">🖼️</div>
-                                        <p>点击上传替换图片</p>
-                                                                                 <label for="replace-input-main" class="file-label" style="display: none;">选择替换图片</label>
-                                         <input type="file" id="replace-input-main" accept="image/*" class="file-input" title="选择要替换的图片文件">
-                                         <button class="upload-btn-main" onclick="document.getElementById('replace-input-main').click()">
-                                            选择图片
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- 缩放控制器 -->
+                            <!-- 缩放控制器移至Canvas上方 -->
                             <div class="scale-controls" id="scale-controls" style="display: none;">
                                 <div class="scale-slider-container">
                                     <label for="scale-slider">缩放：</label>
@@ -106,15 +83,22 @@
                                     <button class="scale-btn" id="apply-replace-btn">✅ 完成</button>
                                 </div>
                             </div>
+                            
+                            <canvas id="main-canvas" width="400" height="400"></canvas>
+                            <div class="canvas-overlay" id="canvas-overlay">
+                                <div class="overlay-content">
+                                    <div class="overlay-icon">🎯</div>
+                                    <p>上传PNG透明图片开始使用</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </section>
 
-                <!-- Right Panel: Replace Tool (Hidden by default) -->
-                <aside class="right-panel hidden" id="replace-panel">
+                <!-- Right Panel: Replace Tool -->
+                <aside class="right-panel" id="replace-panel">
                     <div class="tool-header">
                         <h2>🔧 图片替换工具</h2>
-                        <button class="close-btn" id="close-tool-btn">✕</button>
                     </div>
                     
                     <div class="tool-content">
@@ -134,27 +118,18 @@
                             </div>
                         </div>
 
-                        <div class="preview-section" id="preview-section" style="display: none;">
-                            <h3>👀 预览对比</h3>
-                            <div class="preview-container">
-                                <div class="preview-item">
-                                    <h4>原图</h4>
-                                    <canvas id="original-preview" width="150" height="150"></canvas>
-                                </div>
-                                <div class="preview-arrow">→</div>
-                                <div class="preview-item">
-                                    <h4>替换后</h4>
-                                    <canvas id="result-preview" width="150" height="150"></canvas>
-                                </div>
+                        <div class="replace-info" id="replace-info" style="display: none;">
+                            <h3>📊 替换图片信息</h3>
+                            <div class="info-content">
+                                <p id="replace-filename">文件名: -</p>
+                                <p id="replace-size">尺寸: -</p>
+                                <p id="replace-filesize">大小: -</p>
                             </div>
                         </div>
 
                         <div class="tool-actions">
-                            <button id="apply-btn" class="action-btn primary" disabled>
-                                ✅ 应用替换
-                            </button>
-                            <button id="cancel-btn" class="action-btn secondary">
-                                ❌ 取消
+                            <button id="reset-replace-btn" class="action-btn secondary">
+                                🔄 重新选择
                             </button>
                         </div>
                     </div>
