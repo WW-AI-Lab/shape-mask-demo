@@ -1,0 +1,104 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Shape-Mask 图片替换工具 - Cursor Rules
+
+## 项目概述
+这是一个纯前端的交互式图片替换工具，基于HTML5 Canvas和形状遮罩裁剪技术。
+用户可以上传PNG透明图片作为遮罩，通过点击激活替换模式，拖拽移动和缩放调整替换图片。
+
+## 技术栈
+- **前端**: 原生JavaScript + HTML5 Canvas + CSS3
+- **架构**: 模块化设计，状态管理，事件驱动
+- **核心算法**: Canvas globalCompositeOperation = 'destination-in'
+
+## 代码规范
+
+### JavaScript规范
+- 使用ES6+语法，但保持浏览器兼容性
+- 采用模块化架构：FileManager, CanvasRenderer, ImageProcessor, UIController, EventHandlers
+- 状态管理使用AppState枚举
+- 函数命名采用驼峰命名法，常量使用大写
+- 详细的JSDoc注释，解释函数用途和参数
+
+### HTML规范  
+- 语义化标签，合理的层级结构
+- 三栏布局：左侧上传区、中央Canvas区、右侧工具区
+- 无障碍访问支持，适当的aria标签
+- 响应式设计，支持移动设备
+
+### CSS规范
+- 现代化设计：毛玻璃效果、平滑动画、渐变色
+- BEM命名规范，清晰的类名结构
+- CSS变量管理主题色彩
+- 响应式断点：1200px, 992px, 768px, 480px
+
+## 核心功能模块
+
+### 1. 文件管理 (FileManager)
+- loadImageFile(): 异步加载图片文件
+- validatePNGFile(): PNG格式验证
+- validateImageFile(): 通用图片格式验证
+
+### 2. Canvas渲染 (CanvasRenderer)
+- renderMaskImage(): 渲染遮罩图片
+- adjustCanvasSize(): 自适应Canvas尺寸
+- clearCanvas(): 清空Canvas内容
+
+### 3. 图像处理 (ImageProcessor)
+- cropImageWithMask(): 遮罩裁剪（支持缩放和位置偏移）
+- previewReplaceWithScale(): 实时预览（半透明效果）
+- calculateFitScale(): 自动计算最佳缩放比例
+
+### 4. UI控制 (UIController)
+- 状态管理和界面更新
+- 显示/隐藏各种控制面板
+- 用户反馈和错误处理
+
+### 5. 事件处理 (EventHandlers)
+- Canvas点击检测和拖拽移动
+- 文件上传处理
+- 缩放控制和应用替换
+
+## 交互设计原则
+
+### 用户体验
+- **点击激活**: 只有点击Canvas中的图片才激活替换工具
+- **拖拽移动**: 直接在Canvas上拖拽调整替换图片位置
+- **实时预览**: 所有调整立即反映在Canvas上
+- **智能缩放**: 自动计算最佳缩放比例 + 手动精调
+
+### 视觉反馈
+- **半透明遮罩**: 遮罩区域高亮显示，其他区域半透明
+- **状态提示**: 清晰的操作指导和进度显示
+- **动画效果**: 平滑的过渡和交互反馈
+
+## 开发指导
+
+### 新功能开发
+1. 遵循现有的模块化架构
+2. 更新对应的状态管理逻辑
+3. 添加完整的错误处理
+4. 编写详细的函数注释
+5. 测试浏览器兼容性
+
+### 代码维护
+- 保持向后兼容性
+- 优化性能，避免内存泄漏
+- 及时释放URL.createObjectURL
+- 合理使用防抖和节流
+
+### 调试建议
+- 使用console.log记录关键步骤
+- Canvas操作前后检查状态
+- 文件上传时验证格式和大小
+- 拖拽事件中注意坐标转换
+
+## AI助手工作方式
+- 深入理解现有架构，不破坏模块间的职责分离
+- 优先使用原生API，避免引入外部依赖
+- 关注用户体验，确保交互流畅直观
+- 代码质量优先，保持可读性和可维护性
+- 遵循项目既定的编码规范和设计模式 

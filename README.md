@@ -1,5 +1,12 @@
 # Shape-Mask 图片替换工具 (纯前端实现)
 
+> **WW-AI-Lab 实验项目** - AI辅助开发的交互式图片处理工具  
+> 本项目完全由 AI（Cursor IDE + Claude）辅助完成，展示现代Web技术在图像处理领域的应用潜力。
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Made with AI](https://img.shields.io/badge/Made%20with-AI-blue.svg)](https://github.com/WW-AI-Lab)
+[![Pure Frontend](https://img.shields.io/badge/Pure-Frontend-green.svg)](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API)
+
 一个强大的**交互式图片替换工具**，基于形状遮罩裁剪技术：  
 1. **上传透明PNG** → 作为形状遮罩（mask）  
 2. **点击图片** → 激活替换模式  
@@ -248,3 +255,36 @@ const EventHandlers = { /* 事件处理 */ };
 **MIT License** — 随意商用、改造，欢迎贡献代码！
 
 如果这个项目对你有帮助，请给个 ⭐ Star 支持一下！
+
+---
+
+## 🤖 关于 WW-AI-Lab
+
+这是 **[WW-AI-Lab](https://github.com/WW-AI-Lab)** 的实验项目，我们专注于：
+
+- 🔄 **企业自动化解决方案** - 浏览器自动化、AI工作流
+- 🤖 **Agentic Workflow** - 端到端的AI业务流程
+- 🖼️ **生成式AI应用** - 多模态模型、图像处理
+- 📊 **数据洞察工具** - AI驱动的数据分析
+
+### 💡 项目特点
+- **AI辅助开发**: 本项目完全由 Cursor IDE + Claude 协作完成
+- **生产就绪**: 虽是实验项目，但代码质量达到生产标准
+- **开源共享**: 包含完整的开发过程文档和 Cursor Rules
+- **学习友好**: 详细的技术实现说明，便于学习和改进
+
+### 🚀 从原型到生产
+当实验项目在实践中证明有效时，我们会将其升级为生产级方案并迁移到企业级组织：  
+👉 **[YFGaia](https://github.com/YFGaia)** - 提供更严谨的测试、文档与长期维护
+
+### 📞 联系我们
+
+| 渠道 | 地址 | 用途 |
+|------|------|------|
+| 📧 **Email** | [toxingwang@gmail.com](mailto:toxingwang@gmail.com) | 合作 / 业务咨询 |
+| 🐦 **X (Twitter)** | [@WW_AI_Lab](https://x.com/WW_AI_Lab) | 最新动态、技术分享 |
+| 💬 **微信** | toxingwang | 深度交流，添加请注明来源 |
+
+---
+
+**免责声明**: 本项目仅用于学习与验证技术思路，不保证生产环境可用性。如需商用支持，请通过上述渠道联系。
