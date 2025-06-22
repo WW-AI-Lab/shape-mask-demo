@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shape-Mask 图片替换工具</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <h1 class="title">
+                <span class="icon">🎨</span>
+                Shape-Mask 图片替换工具
+            </h1>
+            <p class="subtitle">上传透明PNG → 点击图片 → 替换内容，保持形状不变</p>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <div class="workspace">
+                <!-- Left Panel: Upload Area -->
+                <aside class="left-panel">
+                    <div class="upload-section">
+                        <h2>📁 上传遮罩图片</h2>
+                        <div class="upload-area" id="mask-upload-area">
+                            <div class="upload-content">
+                                <div class="upload-icon">📸</div>
+                                <p class="upload-text">点击或拖拽上传PNG透明图片</p>
+                                <p class="upload-hint">支持PNG格式，建议大小小于10MB</p>
+                                <label for="mask-input" class="file-label" style="display: none;">上传遮罩图片</label>
+                                <input type="file" id="mask-input" accept="image/png" class="file-input" title="选择PNG透明图片文件">
+                                <button class="upload-btn" onclick="document.getElementById('mask-input').click()">
+                                    选择文件
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Status Display -->
+                    <div class="status-section">
+                        <h3>📊 状态信息</h3>
+                        <div id="status" class="status info">
+                            等待上传遮罩图片...
+                        </div>
+                        <div class="file-info" id="mask-info" style="display: none;">
+                            <h4>遮罩图片信息：</h4>
+                            <p id="mask-filename">文件名: -</p>
+                            <p id="mask-size">尺寸: -</p>
+                            <p id="mask-filesize">大小: -</p>
+                        </div>
+                    </div>
+                </aside>
+
+                <!-- Center Panel: Canvas Display -->
+                <section class="center-panel">
+                    <div class="canvas-container">
+                        <div class="canvas-header">
+                            <h2>🖼️ 图片预览</h2>
+                            <div class="canvas-controls">
+                                <button id="reset-btn" class="control-btn" disabled>
+                                    🔄 重置
+                                </button>
+                                <button id="download-btn" class="control-btn" disabled>
+                                    💾 下载
+                                </button>
+                            </div>
+                        </div>
+                        <div class="canvas-wrapper">
+                            <canvas id="main-canvas" width="400" height="400"></canvas>
+                            <div class="canvas-overlay" id="canvas-overlay">
+                                <div class="overlay-content">
+                                    <div class="overlay-icon">🎯</div>
+                                    <p>上传PNG透明图片开始使用</p>
+                                </div>
+                            </div>
+                            <div class="canvas-click-hint" id="click-hint" style="display: none;">
+                                <div class="hint-content">
+                                    <span class="hint-icon">👆</span>
+                                    <span class="hint-text">点击图片开始替换</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Right Panel: Replace Tool (Hidden by default) -->
+                <aside class="right-panel hidden" id="replace-panel">
+                    <div class="tool-header">
+                        <h2>🔧 图片替换工具</h2>
+                        <button class="close-btn" id="close-tool-btn">✕</button>
+                    </div>
+                    
+                    <div class="tool-content">
+                        <div class="replace-section">
+                            <h3>📷 选择新图片</h3>
+                            <div class="upload-area small" id="replace-upload-area">
+                                <div class="upload-content">
+                                    <div class="upload-icon">🖼️</div>
+                                    <p class="upload-text">选择要替换的图片</p>
+                                    <p class="upload-hint">支持JPG、PNG等格式</p>
+                                    <label for="replace-input" class="file-label" style="display: none;">选择替换图片</label>
+                                    <input type="file" id="replace-input" accept="image/*" class="file-input" title="选择要替换的图片文件">
+                                    <button class="upload-btn small" onclick="document.getElementById('replace-input').click()">
+                                        选择图片
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="preview-section" id="preview-section" style="display: none;">
+                            <h3>👀 预览对比</h3>
+                            <div class="preview-container">
+                                <div class="preview-item">
+                                    <h4>原图</h4>
+                                    <canvas id="original-preview" width="150" height="150"></canvas>
+                                </div>
+                                <div class="preview-arrow">→</div>
+                                <div class="preview-item">
+                                    <h4>替换后</h4>
+                                    <canvas id="result-preview" width="150" height="150"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="tool-actions">
+                            <button id="apply-btn" class="action-btn primary" disabled>
+                                ✅ 应用替换
+                            </button>
+                            <button id="cancel-btn" class="action-btn secondary">
+                                ❌ 取消
+                            </button>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 Shape-Mask 图片替换工具 | 纯前端实现，零后端依赖</p>
+        </div>
+    </footer>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loading-overlay" style="display: none;">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <p class="loading-text">处理中...</p>
+        </div>
+    </div>
+
+    <script type="module" src="app.js"></script>
+</body>
+</html> 
