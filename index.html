@@ -77,10 +77,33 @@
                                     <p>上传PNG透明图片开始使用</p>
                                 </div>
                             </div>
-                            <div class="canvas-click-hint" id="click-hint" style="display: none;">
-                                <div class="hint-content">
-                                    <span class="hint-icon">👆</span>
-                                    <span class="hint-text">点击图片开始替换</span>
+                            
+                            <!-- 替换图片控制层 -->
+                            <div class="replace-controls" id="replace-controls" style="display: none;">
+                                <div class="replace-upload-zone">
+                                    <div class="upload-prompt">
+                                        <div class="upload-icon">🖼️</div>
+                                        <p>点击上传替换图片</p>
+                                                                                 <label for="replace-input-main" class="file-label" style="display: none;">选择替换图片</label>
+                                         <input type="file" id="replace-input-main" accept="image/*" class="file-input" title="选择要替换的图片文件">
+                                         <button class="upload-btn-main" onclick="document.getElementById('replace-input-main').click()">
+                                            选择图片
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 缩放控制器 -->
+                            <div class="scale-controls" id="scale-controls" style="display: none;">
+                                <div class="scale-slider-container">
+                                    <label for="scale-slider">缩放：</label>
+                                    <input type="range" id="scale-slider" min="0.1" max="3" step="0.1" value="1">
+                                    <span id="scale-value">100%</span>
+                                </div>
+                                <div class="scale-buttons">
+                                    <button class="scale-btn" id="fit-btn">📐 适应</button>
+                                    <button class="scale-btn" id="reset-scale-btn">🔄 重置</button>
+                                    <button class="scale-btn" id="apply-replace-btn">✅ 完成</button>
                                 </div>
                             </div>
                         </div>
@@ -155,6 +178,6 @@
         </div>
     </div>
 
-    <script type="module" src="app.js"></script>
+    <script src="app.js"></script>
 </body>
 </html> 

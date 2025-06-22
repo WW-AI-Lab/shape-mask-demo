@@ -344,34 +344,169 @@ body {
     opacity: 0.7;
 }
 
-.canvas-click-hint {
+/* ===== 替换图片控制层 ===== */
+.replace-controls {
     position: absolute;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(52, 152, 219, 0.9);
-    color: white;
-    padding: 8px 16px;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    font-weight: 500;
-    animation: pulse 2s infinite;
-    z-index: 10;
-}
-
-@keyframes pulse {
-    0%, 100% { opacity: 0.9; transform: translateX(-50%) scale(1); }
-    50% { opacity: 1; transform: translateX(-50%) scale(1.05); }
-}
-
-.hint-content {
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(52, 152, 219, 0.1);
+    border: 2px dashed #3498db;
+    border-radius: 15px;
     display: flex;
     align-items: center;
-    gap: 8px;
+    justify-content: center;
+    transition: all 0.3s ease;
+    z-index: 5;
 }
 
-.hint-icon {
-    font-size: 1.2rem;
+.replace-controls:hover {
+    background: rgba(52, 152, 219, 0.15);
+    border-color: #2980b9;
+}
+
+.replace-upload-zone {
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.upload-prompt {
+    color: #3498db;
+}
+
+.upload-prompt .upload-icon {
+    font-size: 3rem;
+    margin-bottom: 15px;
+    display: block;
+}
+
+.upload-prompt p {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 20px;
+}
+
+.upload-btn-main {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 25px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+}
+
+.upload-btn-main:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+}
+
+/* ===== 缩放控制器 ===== */
+.scale-controls {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: 15px;
+    padding: 15px 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    z-index: 10;
+    min-width: 300px;
+}
+
+.scale-slider-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.scale-slider-container label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #2c3e50;
+    min-width: 40px;
+}
+
+#scale-slider {
+    flex: 1;
+    height: 6px;
+    border-radius: 3px;
+    background: #e0e0e0;
+    outline: none;
+    -webkit-appearance: none;
+}
+
+#scale-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #3498db;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(52, 152, 219, 0.3);
+}
+
+#scale-slider::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #3498db;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 2px 6px rgba(52, 152, 219, 0.3);
+}
+
+#scale-value {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #3498db;
+    min-width: 45px;
+    text-align: right;
+}
+
+.scale-buttons {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+}
+
+.scale-btn {
+    background: white;
+    border: 2px solid #e0e0e0;
+    color: #555;
+    padding: 6px 12px;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.scale-btn:hover {
+    border-color: #3498db;
+    color: #3498db;
+    transform: translateY(-1px);
+}
+
+.scale-btn#apply-replace-btn {
+    background: linear-gradient(135deg, #2ecc71, #27ae60);
+    color: white;
+    border-color: #2ecc71;
+}
+
+.scale-btn#apply-replace-btn:hover {
+    border-color: #27ae60;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
 }
 
 /* ===== Right Panel Styles ===== */

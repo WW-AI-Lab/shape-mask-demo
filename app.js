@@ -17,6 +17,8 @@ let currentState = AppState.INITIAL;
 let maskImage = null;
 let replaceImage = null;
 let resultCanvas = null;
+let currentScale = 1;
+let isReplacing = false;
 
 // ===== 工具函数 =====
 const Utils = {
@@ -151,11 +153,10 @@ const CanvasRenderer = {
      * 调整Canvas显示尺寸（保持宽高比）
      */
     adjustCanvasSize(canvas, maxWidth = 400, maxHeight = 400) {
-        const img = canvas;
-        const ratio = Math.min(maxWidth / img.width, maxHeight / img.height);
+        const ratio = Math.min(maxWidth / canvas.width, maxHeight / canvas.height);
         
-        canvas.style.width = (img.width * ratio) + 'px';
-        canvas.style.height = (img.height * ratio) + 'px';
+        canvas.style.width = (canvas.width * ratio) + 'px';
+        canvas.style.height = (canvas.height * ratio) + 'px';
     }
 };
 
@@ -208,42 +209,92 @@ const ImageProcessor = {
         const y = (size - scaledHeight) / 2;
         
         ctx.drawImage(canvas, x, y, scaledWidth, scaledHeight);
+    },
+
+    /**
+     * 实时预览替换效果（可缩放）
+     */
+    previewReplaceWithScale(maskImg, srcImg, scale = 1) {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // 设置画布尺寸为遮罩尺寸
+        canvas.width = maskImg.width;
+        canvas.height = maskImg.height;
+        
+        // 计算缩放后的源图像尺寸
+        const scaledWidth = srcImg.width * scale;
+        const scaledHeight = srcImg.height * scale;
+        
+        // 计算居中位置
+        const x = (canvas.width - scaledWidth) / 2;
+        const y = (canvas.height - scaledHeight) / 2;
+        
+        // 先绘制缩放后的源图像
+        ctx.drawImage(srcImg, x, y, scaledWidth, scaledHeight);
+        
+        // 应用遮罩
+        ctx.globalCompositeOperation = 'destination-in';
+        ctx.drawImage(maskImg, 0, 0);
+        
+        // 重置混合模式
+        ctx.globalCompositeOperation = 'source-over';
+        
+        return canvas;
+    },
+
+    /**
+     * 计算最佳适应缩放比例
+     */
+    calculateFitScale(maskImg, srcImg) {
+        return Math.min(maskImg.width / srcImg.width, maskImg.height / srcImg.height);
     }
 };
 
 // ===== UI控制模块 =====
 const UIController = {
     /**
-     * 显示右侧替换工具面板
+     * 显示替换控制层
      */
-    showReplacePanel() {
-        const panel = document.getElementById('replace-panel');
-        panel.classList.remove('hidden');
-        
-        // 显示点击提示
-        const clickHint = document.getElementById('click-hint');
-        clickHint.style.display = 'none';
+    showReplaceControls() {
+        const replaceControls = document.getElementById('replace-controls');
+        replaceControls.style.display = 'flex';
         
         currentState = AppState.TOOL_ACTIVE;
-        this.updateStatus('工具面板已打开，请选择要替换的图片', 'info');
+        this.updateStatus('点击上传要替换的图片', 'info');
     },
 
     /**
-     * 隐藏右侧替换工具面板
+     * 隐藏替换控制层
      */
-    hideReplacePanel() {
-        const panel = document.getElementById('replace-panel');
-        panel.classList.add('hidden');
+    hideReplaceControls() {
+        const replaceControls = document.getElementById('replace-controls');
+        replaceControls.style.display = 'none';
+    },
+
+    /**
+     * 显示缩放控制器
+     */
+    showScaleControls() {
+        const scaleControls = document.getElementById('scale-controls');
+        scaleControls.style.display = 'block';
         
-        // 重置工具面板状态
-        this.resetReplacePanel();
+        // 初始化缩放滑块
+        const scaleSlider = document.getElementById('scale-slider');
+        const scaleValue = document.getElementById('scale-value');
         
-        currentState = AppState.MASK_LOADED;
-        this.updateStatus('点击图片可重新打开替换工具', 'info');
+        scaleSlider.value = currentScale;
+        scaleValue.textContent = Math.round(currentScale * 100) + '%';
         
-        // 显示点击提示
-        const clickHint = document.getElementById('click-hint');
-        clickHint.style.display = 'block';
+        this.updateStatus('调整图片大小，点击"完成"应用替换', 'info');
+    },
+
+    /**
+     * 隐藏缩放控制器
+     */
+    hideScaleControls() {
+        const scaleControls = document.getElementById('scale-controls');
+        scaleControls.style.display = 'none';
     },
 
     /**
@@ -312,34 +363,43 @@ const EventHandlers = {
      * 处理遮罩图片上传
      */
     async handleMaskUpload(file) {
+        console.log('handleMaskUpload开始处理文件:', file);
         try {
             Utils.showLoading('加载遮罩图片...');
+            console.log('显示加载动画');
             
             // 验证文件
+            console.log('开始验证PNG文件');
             FileManager.validatePNGFile(file);
+            console.log('PNG文件验证通过');
             
             // 加载图片
+            console.log('开始加载图片');
             const image = await FileManager.loadImageFile(file);
+            console.log('图片加载成功:', image.width, 'x', image.height);
             
             // 存储遮罩图片
             maskImage = image;
+            console.log('遮罩图片已存储');
             
             // 渲染到Canvas
             const mainCanvas = document.getElementById('main-canvas');
+            console.log('获取主Canvas:', mainCanvas);
             CanvasRenderer.renderMaskImage(image, mainCanvas);
+            console.log('图片已渲染到Canvas');
             CanvasRenderer.adjustCanvasSize(mainCanvas);
+            console.log('Canvas尺寸已调整');
             
             // 隐藏覆盖层
             const overlay = document.getElementById('canvas-overlay');
             overlay.classList.add('hidden');
             
-            // 显示点击提示
-            const clickHint = document.getElementById('click-hint');
-            clickHint.style.display = 'block';
+            // 显示替换控制层
+            UIController.showReplaceControls();
             
             // 更新UI状态
             UIController.showMaskInfo(file, image);
-            UIController.updateStatus('遮罩图片加载成功！点击图片开始替换', 'success');
+            UIController.updateStatus('遮罩图片加载成功！点击上传要替换的图片', 'success');
             UIController.toggleControlButtons(true);
             
             currentState = AppState.MASK_LOADED;
@@ -353,7 +413,7 @@ const EventHandlers = {
     },
 
     /**
-     * 处理替换图片上传
+     * 处理替换图片上传（新的交互方式）
      */
     async handleReplaceUpload(file) {
         try {
@@ -367,19 +427,21 @@ const EventHandlers = {
             
             // 存储替换图片
             replaceImage = image;
+            isReplacing = true;
             
-            // 生成预览
-            this.generatePreviews();
+            // 计算最佳适应缩放
+            currentScale = ImageProcessor.calculateFitScale(maskImage, replaceImage);
             
-            // 显示预览区域
-            const previewSection = document.getElementById('preview-section');
-            previewSection.style.display = 'block';
+            // 隐藏替换控制层
+            UIController.hideReplaceControls();
             
-            // 启用应用按钮
-            const applyBtn = document.getElementById('apply-btn');
-            applyBtn.disabled = false;
+            // 立即显示替换效果
+            this.updateReplacePreview();
             
-            UIController.updateStatus('替换图片已准备就绪，点击"应用替换"完成操作', 'success');
+            // 显示缩放控制器
+            UIController.showScaleControls();
+            
+            currentState = AppState.PROCESSING;
             
         } catch (error) {
             UIController.updateStatus(`错误: ${error.message}`, 'error');
@@ -387,6 +449,39 @@ const EventHandlers = {
         } finally {
             Utils.hideLoading();
         }
+    },
+
+    /**
+     * 更新替换预览（实时）
+     */
+    updateReplacePreview() {
+        if (!maskImage || !replaceImage) return;
+        
+        // 生成预览Canvas
+        const previewCanvas = ImageProcessor.previewReplaceWithScale(maskImage, replaceImage, currentScale);
+        
+        // 更新主Canvas
+        const mainCanvas = document.getElementById('main-canvas');
+        const ctx = mainCanvas.getContext('2d');
+        
+        mainCanvas.width = previewCanvas.width;
+        mainCanvas.height = previewCanvas.height;
+        ctx.clearRect(0, 0, mainCanvas.width, mainCanvas.height);
+        ctx.drawImage(previewCanvas, 0, 0);
+        
+        CanvasRenderer.adjustCanvasSize(mainCanvas);
+    },
+
+    /**
+     * 处理缩放变化
+     */
+    handleScaleChange(newScale) {
+        currentScale = newScale;
+        this.updateReplacePreview();
+        
+        // 更新缩放值显示
+        const scaleValue = document.getElementById('scale-value');
+        scaleValue.textContent = Math.round(currentScale * 100) + '%';
     },
 
     /**
@@ -407,32 +502,25 @@ const EventHandlers = {
     },
 
     /**
-     * 应用图片替换
+     * 应用图片替换（完成缩放调整）
      */
     async applyReplacement() {
         try {
             Utils.showLoading('正在应用替换...');
-            currentState = AppState.PROCESSING;
             
-            // 执行图片替换
-            resultCanvas = ImageProcessor.cropImageWithMask(maskImage, replaceImage);
+            // 执行图片替换（使用当前缩放）
+            resultCanvas = ImageProcessor.previewReplaceWithScale(maskImage, replaceImage, currentScale);
             
-            // 更新主Canvas
-            const mainCanvas = document.getElementById('main-canvas');
-            const ctx = mainCanvas.getContext('2d');
+            // 隐藏缩放控制器
+            UIController.hideScaleControls();
             
-            mainCanvas.width = resultCanvas.width;
-            mainCanvas.height = resultCanvas.height;
-            ctx.clearRect(0, 0, mainCanvas.width, mainCanvas.height);
-            ctx.drawImage(resultCanvas, 0, 0);
-            
-            CanvasRenderer.adjustCanvasSize(mainCanvas);
-            
-            // 关闭工具面板
-            UIController.hideReplacePanel();
-            
+            // 重置状态
+            isReplacing = false;
             currentState = AppState.COMPLETED;
-            UIController.updateStatus('图片替换完成！可以下载结果或继续替换', 'success');
+            UIController.updateStatus('图片替换完成！可以下载结果或点击图片重新替换', 'success');
+            
+            // 重新显示替换控制层，允许再次替换
+            UIController.showReplaceControls();
             
         } catch (error) {
             UIController.updateStatus(`替换失败: ${error.message}`, 'error');
@@ -443,6 +531,30 @@ const EventHandlers = {
     },
 
     /**
+     * 取消替换操作
+     */
+    cancelReplacement() {
+        // 恢复遮罩图片显示
+        const mainCanvas = document.getElementById('main-canvas');
+        CanvasRenderer.renderMaskImage(maskImage, mainCanvas);
+        CanvasRenderer.adjustCanvasSize(mainCanvas);
+        
+        // 隐藏缩放控制器
+        UIController.hideScaleControls();
+        
+        // 显示替换控制层
+        UIController.showReplaceControls();
+        
+        // 重置状态
+        replaceImage = null;
+        isReplacing = false;
+        currentScale = 1;
+        currentState = AppState.MASK_LOADED;
+        
+        UIController.updateStatus('已取消替换，请重新选择图片', 'info');
+    },
+
+    /**
      * 重置应用状态
      */
     resetApp() {
@@ -450,6 +562,8 @@ const EventHandlers = {
         maskImage = null;
         replaceImage = null;
         resultCanvas = null;
+        currentScale = 1;
+        isReplacing = false;
         currentState = AppState.INITIAL;
         
         // 重置UI
@@ -459,17 +573,16 @@ const EventHandlers = {
         const overlay = document.getElementById('canvas-overlay');
         overlay.classList.remove('hidden');
         
-        const clickHint = document.getElementById('click-hint');
-        clickHint.style.display = 'none';
-        
-        UIController.hideReplacePanel();
+        UIController.hideReplaceControls();
+        UIController.hideScaleControls();
         UIController.hideMaskInfo();
         UIController.toggleControlButtons(false);
         UIController.updateStatus('等待上传遮罩图片...', 'info');
         
         // 清空文件输入
         document.getElementById('mask-input').value = '';
-        document.getElementById('replace-input').value = '';
+        const replaceInputMain = document.getElementById('replace-input-main');
+        if (replaceInputMain) replaceInputMain.value = '';
     },
 
     /**
@@ -562,41 +675,70 @@ function initializeApp() {
 
 // ===== 事件绑定 =====
 function bindEventListeners() {
+    console.log('开始绑定事件监听器...');
+    
     // 遮罩图片上传
-    document.getElementById('mask-input').addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            EventHandlers.handleMaskUpload(file);
-        }
-    });
+    const maskInput = document.getElementById('mask-input');
+    if (maskInput) {
+        console.log('找到mask-input元素，绑定change事件');
+        maskInput.addEventListener('change', (e) => {
+            console.log('mask-input change事件触发');
+            const file = e.target.files[0];
+            if (file) {
+                console.log('选择的文件:', file.name, file.type, file.size);
+                EventHandlers.handleMaskUpload(file);
+            }
+        });
+    } else {
+        console.error('未找到mask-input元素');
+    }
     
-    // 替换图片上传
-    document.getElementById('replace-input').addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            EventHandlers.handleReplaceUpload(file);
-        }
-    });
+    // 主替换图片上传（新的交互方式）
+    const replaceInputMain = document.getElementById('replace-input-main');
+    if (replaceInputMain) {
+        replaceInputMain.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                EventHandlers.handleReplaceUpload(file);
+            }
+        });
+    }
     
-    // Canvas点击事件
-    document.getElementById('main-canvas').addEventListener('click', () => {
-        if (currentState === AppState.MASK_LOADED || currentState === AppState.COMPLETED) {
-            UIController.showReplacePanel();
-        }
-    });
+    // 缩放控制器事件
+    const scaleSlider = document.getElementById('scale-slider');
+    if (scaleSlider) {
+        scaleSlider.addEventListener('input', (e) => {
+            const newScale = parseFloat(e.target.value);
+            EventHandlers.handleScaleChange(newScale);
+        });
+    }
     
-    // 工具面板控制
-    document.getElementById('close-tool-btn').addEventListener('click', () => {
-        UIController.hideReplacePanel();
-    });
+    // 缩放控制按钮
+    const fitBtn = document.getElementById('fit-btn');
+    if (fitBtn) {
+        fitBtn.addEventListener('click', () => {
+            if (maskImage && replaceImage) {
+                const fitScale = ImageProcessor.calculateFitScale(maskImage, replaceImage);
+                document.getElementById('scale-slider').value = fitScale;
+                EventHandlers.handleScaleChange(fitScale);
+            }
+        });
+    }
     
-    document.getElementById('apply-btn').addEventListener('click', () => {
-        EventHandlers.applyReplacement();
-    });
+    const resetScaleBtn = document.getElementById('reset-scale-btn');
+    if (resetScaleBtn) {
+        resetScaleBtn.addEventListener('click', () => {
+            document.getElementById('scale-slider').value = 1;
+            EventHandlers.handleScaleChange(1);
+        });
+    }
     
-    document.getElementById('cancel-btn').addEventListener('click', () => {
-        UIController.hideReplacePanel();
-    });
+    const applyReplaceBtn = document.getElementById('apply-replace-btn');
+    if (applyReplaceBtn) {
+        applyReplaceBtn.addEventListener('click', () => {
+            EventHandlers.applyReplacement();
+        });
+    }
     
     // 控制按钮
     document.getElementById('reset-btn').addEventListener('click', () => {
